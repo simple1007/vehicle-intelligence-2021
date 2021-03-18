@@ -42,8 +42,8 @@ def motion_model(position, mov, priors, map_size, stdev):
     # Initialize the position's probability to zero.
     position_prob = 0.0
     
-    for t1 in range(position):
-        p_trans = norm_pdf(position-t1,mov,stdev)
+    for t1 in range(len(priors)):
+        p_trans = norm_pdf(position-t1,1,stdev)
         prior = priors[t1]
 
         position_prob = position_prob + (p_trans * prior)
@@ -59,9 +59,11 @@ def observation_model(landmarks, observations, pseudo_ranges, stdev):
     # Initialize the measurement's probability to one.
     distance_prob = 1.0
     
-    if (len(observations) !=0) and len(observations) < len(pseudo_ranges):
-        for i, observation in enumerate(observations):
-            distance_prob = distance_prob * norm_pdf(observation,pseudo_ranges[i],stdev)
+    if (len(observations) !=0) and (len(observations) <= len(pseudo_ranges)):
+        for i in range(len(observations)):
+            distance_prob = distance_prob * norm_pdf(observations[i],pseudo_ranges[i],stdev)
+    else:
+        distance_prob = 0.0
     # TODO: Calculate the observation model probability as follows:
     # (1) If we have no observations, we do not have any probability.
     # (2) Having more observations than the pseudo range indicates that
