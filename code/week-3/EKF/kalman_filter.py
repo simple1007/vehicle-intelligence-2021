@@ -41,7 +41,8 @@ class KalmanFilter:
         y = z - hx
         # 5. Normalize phi so that it is between -PI and +PI 
         # y[1] = y[1] / (math.pi*2)
-        print(y[1])
+        if y[1] > 3.14 or y[1] < -3.14:
+            y[1] = y[1] % 3.14
         # 6. Calculate new estimates
         #    x = x' + K * y
         #    P = (I - K * H_j) * P
