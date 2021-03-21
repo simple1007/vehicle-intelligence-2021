@@ -2,7 +2,6 @@ import numpy as np
 from math import sqrt
 from math import atan2
 from tools import Jacobian
-import math
 
 class KalmanFilter:
     def __init__(self, x_in, P_in, F_in, H_in, R_in, Q_in):
@@ -42,8 +41,7 @@ class KalmanFilter:
         y = z - hx
         # 5. Normalize phi so that it is between -PI and +PI 
         # y[1] = y[1] / (math.pi*2)
-
-        y[1] = math.radians(y[1])
+        print(y[1])
         # 6. Calculate new estimates
         #    x = x' + K * y
         #    P = (I - K * H_j) * P
