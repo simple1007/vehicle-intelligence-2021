@@ -2,6 +2,7 @@ import numpy as np
 from math import sqrt
 from math import atan2
 from tools import Jacobian
+import math
 
 class KalmanFilter:
     def __init__(self, x_in, P_in, F_in, H_in, R_in, Q_in):
@@ -26,10 +27,33 @@ class KalmanFilter:
     def update_ekf(self, z):
         # TODO: Implement EKF update for radar measurements
         # 1. Compute Jacobian Matrix H_j
+        Hj = Jacobian(self.x)
         # 2. Calculate S = H_j * P' * H_j^T + R
+        S = np.dot(np.dot(Hj, self.P ), Hj.T) + self.R
         # 3. Calculate Kalman gain K = H_j * P' * Hj^T + R
+        K = np.dot(np.dot(self.P, Hj.T), np.linalg.inv(S))
         # 4. Estimate y = z - h(x')
-        # 5. Normalize phi so that it is between -PI and +PI
+        sqrt_x = sqrt(self.x[0]*self.x[0] + self.x[1]*self.x[1])
+        tan_1 = atan2(self.x[1],self.x[0])
+        sqrt_x_2 = (self.x[0]*self.x[2]+ self.x[1]*self.x[3])/sqrt_x
+        
+        hx = np.array([sqrt_x,tan_1,sqrt_x_2])
+
+        y = z - hx
+        # 5. Normalize phi so that it is between -PI and +PI 
+        # y[1] = y[1] / (math.pi*2)
+
+        y[1] = math.radians(y[1])
         # 6. Calculate new estimates
         #    x = x' + K * y
         #    P = (I - K * H_j) * P
+        self.x = self.x + np.dot(K,y)
+        IK = np.eye(4) - np.dot(K,Hj)
+        self.P = np.dot(IK,self.P)
+        
+
+        
+        
+        
+        
+        
