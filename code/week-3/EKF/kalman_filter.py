@@ -41,7 +41,9 @@ class KalmanFilter:
         y = z - hx
         # 5. Normalize phi so that it is between -PI and +PI 
         # y[1] = y[1] / (math.pi*2)
-        if y[1] > 3.14 or y[1] < -3.14:
+        if y[1] < 0:
+            y[1] = y[1] % -3.14
+        else:
             y[1] = y[1] % 3.14
         # 6. Calculate new estimates
         #    x = x' + K * y
@@ -49,10 +51,3 @@ class KalmanFilter:
         self.x = self.x + np.dot(K,y)
         IK = np.eye(4) - np.dot(K,Hj)
         self.P = np.dot(IK,self.P)
-        
-
-        
-        
-        
-        
-        
