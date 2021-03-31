@@ -118,105 +118,6 @@ class ParticleFilter:
             
             association_temp = self.associate(predictions,transformed_obs)
             
-            # x = [v['x'] for v in t_obs_pre]
-            # y = [v['y'] for v in t_obs_pre]
-            # xy = [[v['x'],v['y']] for v in t_obs_pre]
-            # # y = [v['y'] v in t_obs_pre]
-            # x = np.array(x)
-            # y = np.array(y)
-            # xy = np.array(xy)
-            # # x = np.array(x)
-            # # y = np.array(y)
-            # # print(xy.mean())
-            # cov = np.cov(np.array([std_landmark_x,0]),np.array([0,std_landmark_y]))
-            # print(cov)
-            # # cov = np.cov(x,y)
-            # #[[std_landmark_x,0], [0,std_landmark_y]]
-            # # print(np.cov(xy))
-            # obs_w = np.random.multivariate_normal(mean=[x.mean(),y.mean()],cov=cov).mean()
-            # print(obs_w)
-            # if obs_w == 0.0:
-            #     p['w'] *= 0.00001
-            # else:
-            #     p['w'] *= obs_w
-
-            # p['w'] = 1.0
-            # p['w'] = 1.0
-            # for t_obs in transformed_obs:#association_temp:
-            # # for t_obs in observation:
-            #     pred_x = 0.0
-            #     pred_y = 0.0
-            #     obs_w = 0.0
-
-            #     tobs_x = t_obs['x']
-            #     tobs_y = t_obs['y']
-            #     for pre in predictions:
-            #         # if t_obs['id'] == pre['id']:
-            #             pred_x = pre['x']
-            #             pred_y = pre['y']
-
-            #             associations.append(pre['id'])
-            #                 # associations.append(t_obs['x'])
-            #                 # associations.append(t_obs['y'])
-            #                 # sense_x.append(tobs_x)
-            #                 # sense_y.append(tobs_y)
-                      
-            #     normalizer = 1.0/(2.0*math.pi*std_landmark_x*std_landmark_y)
-                
-            #     exponent = ((tobs_x-pred_x) ** 2) / (2*(std_landmark_x**2)) + ((tobs_y-pred_y) ** 2) / (2 * std_landmark_y**2)
-            #     # print(exponent)
-
-            #     obs_w = normalizer * math.exp(-1.0 * exponent)    
-            #     print(obs_w)
-            #     if obs_w == 0.0:
-            #         p['w'] *= 0.00001
-            #     else:
-            #         p['w'] *= obs_w
-            
-            # p['w'] = 1.0
-            # x = [v['x'] for v in association_temp]
-            # y = [v['y'] for v in association_temp]
-
-            # x = np.array(x)
-            # y = np.array(y)
-
-            
-            # for t_obs in association_temp:
-            # # for t_obs in observation:
-            #     pred_x = 0.0
-            #     pred_y = 0.0
-            #     obs_w = 0.0
-
-            #     tobs_x = t_obs['x']
-            #     tobs_y = t_obs['y']
-            #     associations.append(t_obs['id'])
-            #     pred_x = x.mean()
-            #     pred_y = y.mean()
-            #     # print(pred_x)
-            #     # print(pred_y)
-            #     # print('------')      
-            #     normalizer = 1.0/(2.0*math.pi*std_landmark_x*std_landmark_y)
-                
-            #     exponent = ((tobs_x-pred_x) ** 2) / (2*(std_landmark_x**2)) + ((tobs_y-pred_y) ** 2) / (2 * std_landmark_y**2)
-            #     print(exponent)
-
-            #     obs_w = normalizer * math.exp(-1.0 * exponent)  
-            #     print(obs_w)  
-            #     print('------') 
-            #     # print(obs_w)
-            #     if obs_w == 0.0:
-            #         p['w'] *= 0.00001
-            #     else:
-            #         p['w'] *= obs_w
-            
-            # # assoc = [ v['id'] for v in t_obs_pre ]
-            # # print(obs_w)
-            # # print(p['w'])
-            # # print(associations)
-            # p['assoc'] = associations
-            # print(p['assoc'])
-            # norm_weight += p['weight']
-            # import scipy
             for i in association_temp:
                 normalizer = 1.0/(2.0*math.pi*std_landmark_x*std_landmark_y)
                 
@@ -227,50 +128,7 @@ class ParticleFilter:
                 obs_w += 1.e-300 # avoid round-off to zero
                 p['w'] *= obs_w
                 associations.append(i['id'])
-            # for l in transformed_obs:
-            #     pred_x = None
-            #     pred_y = None 
-            #     obs_w = None
-
-            #     tobs_x = l['x']
-            #     tobs_y = l['y']
-
-            #     for ass in association_temp:
-            #         # if l['id'] == ass['id']:
-            #         pred_x = ass['x']
-            #         pred_y = ass['y']
-            #         associations.append(ass['id'])
-                
-            #     normalizer = 1.0/(2.0*math.pi*std_landmark_x*std_landmark_y)
-                
-            #     exponent = ((pred_x-tobs_x) ** 2) / (2*(std_landmark_x**2)) + ((pred_y-tobs_y) ** 2) / (2 * (std_landmark_y**2))
-            #     # print(exponent)
-                
-            #     obs_w = normalizer * math.exp(-1.0 * exponent)  
-            #     # print(obs_w)
-            #     # print(obs_w)  
-            #     # print('------') 
-            #     # print(obs_w)
-            #     p['w'] = p['w'] * obs_w
-            #     # if obs_w == 0.0:
-            #     #     # print('--------------------')
-            #     #     # print(p['w'])
-            #     #     print(p['w'])
-            #     #     p['w'] = p['w'] * 0.00001
-            #     #     if p['w'] == 0.0:
-            #     #         p['w'] = 0.00001
-            #     #     # print('%6f' % p['w'])
-            #     #     # print(['------------'])
-            #     # else:
-            #     #     p['w'] = p['w'] * obs_w
-            #         # print(obs_w)
-                
-            #     # if p['w'] == 0.0:
-            #     #     print('-----------------')
-            #     #     p['w'] = 0.00001
-            #     #     print(p['w'])
-            #     #     print('-----------------')
-            # # print(obs_w)
+            
             p['assoc'] = associations
 
         
@@ -325,7 +183,7 @@ class ParticleFilter:
             else:
                 j += 1
         
-        resampled_particles.append(self.particles[i])
+        resampled_particles.append(self.particles[indexes[i]])
 
         self.particles = resampled_particles
 
