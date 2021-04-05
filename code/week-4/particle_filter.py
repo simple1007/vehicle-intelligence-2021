@@ -103,10 +103,12 @@ class ParticleFilter:
 
             for obs in observations:
                 obs_temp = {}
+                
                 obs_temp['x'] = prt_x + (obs['x'] * math.cos(prt_theta)) - obs['y'] * math.sin(prt_theta)
                 obs_temp['y'] = prt_y + (obs['x'] * math.sin(prt_theta)) + obs['y'] * math.cos(prt_theta)
                 transformed_obs.append(obs_temp)
-                
+                # print("%f %f" % (obs['x'],obs['y']))
+                # print("%f %f %f %f" % (prt_x,prt_y,obs_temp['x'],obs_temp['y']) )
                 # print(obs_temp['x'])
                 # print(obs_temp['y'])
                 # print('-----------')
@@ -114,23 +116,40 @@ class ParticleFilter:
             if len(predictions) == 0:
                 continue
 
-            p['w'] = 1.0
+            # p['w'] = 1.0
             
             association_temp = self.associate(predictions,transformed_obs)
             
-            for i in association_temp:
-                normalizer = 1.0/(2.0*math.pi*std_landmark_x*std_landmark_y)
+            for i in range(len(association_temp)):
+                ox = transformed_obs[i]['x']
+                oy = transformed_obs[i]['y']
+
+                ax = association_temp[i]['x']
+                ay = association_temp[i]['y']
+
+                # print("ao %f %f %f %f" % (ox,oy,ax,ay))
+                # normalizer = 1./(2.*math.pi*s_x*s_y);
+
+                # exponent = pow(ox-ax,2)/(2*pow(s_x, 2)) + pow(oy-ay,2)/(2*pow(s_y, 2))
+
+                # import scipy
+                import scipy.stats
+                # distance_t = distance({'x':ox,'y':oy} ,{'x':ax,'y':ay})
+                p['w'] *= scipy.stats.multivariate_normal([ax,ay], [[std_landmark_x**2,0],[0,std_landmark_y**2]]).pdf([ox,oy])+0.00001#scipy.stats.norm(distance_t, [std_landmark_x,std_landmark_y]).pdf([ox,oy]))
                 
-                exponent = ((p['x']-i['x']) ** 2) / (2*(std_landmark_x**2)) + ((p['y']-i['y']) ** 2) / (2 * (std_landmark_y**2))
+                # print(p['w'])
                 # print(exponent)
                 
-                obs_w = normalizer * math.exp(-1.0 * exponent)  
-                obs_w += 1.e-300 # avoid round-off to zero
-                p['w'] *= obs_w
-                associations.append(i['id'])
-            
+                # obs_w = normalizer * math.exp((-1.0 * exponent))  
+                # obs_w +=  1e-300 # avoid round-off to zero
+                # # p['w'] *= obs_w
+                
+                associations.append(association_temp[i]['id'])
+                # p['w'] *= obs_w
+                # print(obs_w)
+                # print(p['w'])
             p['assoc'] = associations
-
+            # print(p['w'])
         
         # TODO: For each particle, do the following:
         # 1. Select the set of landmarks that are visible
@@ -169,23 +188,52 @@ class ParticleFilter:
         import random
 
         weights = [p['w'] for p in self.particles] 
-        resampled_particles = []
-        N = len(weights)
-        positions = (np.arange(N) + np.random.random()) / N
-    
-        indexes = np.zeros(N, 'i')
-        cumulative_sum = np.cumsum(weights)
-        i, j = 0, 0
-        while i < N and j<N:
-            if positions[i] < cumulative_sum[j]:
-                indexes[i] = j
-                i += 1
-            else:
-                j += 1
+        # print(weights)
         
-        resampled_particles.append(self.particles[indexes[i]])
-
+        N = len(self.particles)
+        resampled_particles = []
+        c = weights[0]
+        i = 0
+        j = 0
+        r = np.random.uniform(0.0,1/N)
+        # print("a"+str(r))
+        # print(weights)
+        for m in range(N):
+            U = r + (m-1)/N
+            # print(U > c)
+            # print(c)
+            flag = True
+            while U > c:
+                if (i+1) < N:
+                    i = i + 1
+                    # print(i)
+                    
+                    c = c + weights[i]
+                else:
+                    flag = False
+                    break
+            # print(i)
+            if flag:
+                resampled_particles.append(self.particles[i])
+            # j = j + 1
+        # print(resampled_particles)
         self.particles = resampled_particles
+        # positions = (np.arange(N) + np.random.random()) / N
+    
+        # indexes = np.zeros(N, 'i')
+        # cumulative_sum = np.cumsum(weights)
+        # i, j = 0, 0
+        # while i < N and j<N:
+        #     if positions[i] < cumulative_sum[j]:
+        #         indexes[i] = j
+        #         i += 1
+        #     else:
+        #         j += 1
+        
+        # print(i)
+        # resampled_particles.append(self.particles[indexes[i]])
+
+        # self.particles = resampled_particles
 
 
     # Choose the particle with the highest weight (probability)
