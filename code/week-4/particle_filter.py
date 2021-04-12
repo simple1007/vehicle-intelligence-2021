@@ -83,12 +83,13 @@ class ParticleFilter:
         norm_weight = 0.0
         observation = []
         for p in self.particles:
+            wt = 1.0
             prt_x = p['x']
             prt_y = p['y']
             prt_theta = p['t'] 
 
             predictions = []
-            transformed_obs = []
+            transformed_obser = []
 
             for k,v in map_landmarks.items():
                 x_ml = v['x']
@@ -106,7 +107,10 @@ class ParticleFilter:
                 
                 obs_temp['x'] = prt_x + (obs['x'] * math.cos(prt_theta)) - obs['y'] * math.sin(prt_theta)
                 obs_temp['y'] = prt_y + (obs['x'] * math.sin(prt_theta)) + obs['y'] * math.cos(prt_theta)
-                transformed_obs.append(obs_temp)
+                transformed_obser.append(obs_temp)
+            
+            # tobs_x = [ttt['x'] for ttt in transformed_obser]
+            # tobs_y = [ttt['y'] for ttt in transformed_obser]
                 # print("%f %f" % (obs['x'],obs['y']))
                 # print("%f %f %f %f" % (prt_x,prt_y,obs_temp['x'],obs_temp['y']) )
                 # print(obs_temp['x'])
@@ -118,38 +122,48 @@ class ParticleFilter:
 
             # p['w'] = 1.0
             
-            association_temp = self.associate(predictions,transformed_obs)
-            
-            for i in range(len(association_temp)):
-                ox = transformed_obs[i]['x']
-                oy = transformed_obs[i]['y']
+            association_temp = self.associate(predictions,transformed_obser)
+            p['assoc'] = [ot['id'] for ot in associations]
 
-                ax = association_temp[i]['x']
-                ay = association_temp[i]['y']
-
-                # print("ao %f %f %f %f" % (ox,oy,ax,ay))
-                # normalizer = 1./(2.*math.pi*s_x*s_y);
-
-                # exponent = pow(ox-ax,2)/(2*pow(s_x, 2)) + pow(oy-ay,2)/(2*pow(s_y, 2))
-
-                # import scipy
-                import scipy.stats
-                # distance_t = distance({'x':ox,'y':oy} ,{'x':ax,'y':ay})
-                p['w'] *= scipy.stats.multivariate_normal([ax,ay], [[std_landmark_x**2,0],[0,std_landmark_y**2]]).pdf([ox,oy])+0.00001#scipy.stats.norm(distance_t, [std_landmark_x,std_landmark_y]).pdf([ox,oy]))
+            for idx, val in enumerate(transformed_obser):
                 
-                # print(p['w'])
-                # print(exponent)
+                transformed_obs = {'x': obs_temp['x'], 'y': obs_temp['y']}
                 
-                # obs_w = normalizer * math.exp((-1.0 * exponent))  
-                # obs_w +=  1e-300 # avoid round-off to zero
-                # # p['w'] *= obs_w
+                s_landmark_k = []
+                s_landmark = {}
+ 
+                for idx, val in enumerate(predictions):
+                    print(val)
+                    print(transformed_obs)
+                    dist = distance(transformed_obs, val)
+                    s_landmark_k.append({'dist': dist, 'x': val['x'], 'y': val['y']})
+                    
+
+                distance_min = s_landmark_k[0]['dist']
+                s_landmark = s_landmark_k[0]
+
+                for i in range(1, len(s_landmark_k)):
+                    if distance_min >= s_landmark_k[i]['dist']:
+                        s_landmark = s_landmark_k[i]
+
+                ##print("Single_landmark: ", single_landmark)
+                ##// update weights using Multivariate Gaussian Distribution
+                ##// equation given in Transformations and Associations Quiz
+
+
+                normalizer = 1./ 2. * np.pi * std_landmark_x * std_landmark_y
+
+                exponent = pow((transformed_obs['x'] - s_landmark['x']), 2) / pow(std_landmark_x, 2) + pow((transformed_obs['y'] - s_landmark['y']), 2) /pow(std_landmark_y, 2)
+
+                obs_w = normalizer * math.exp((-0.5 * exponent))  
+                obs_w +=  1e-25 # avoid round-off to zero
+
+                wt *= obs_w
                 
-                associations.append(association_temp[i]['id'])
-                # p['w'] *= obs_w
-                # print(obs_w)
-                # print(p['w'])
-            p['assoc'] = associations
-            # print(p['w'])
+                ##print("Wt: ", wt)
+
+            #weight_sum += wt
+            p['w'] = wt
         
         # TODO: For each particle, do the following:
         # 1. Select the set of landmarks that are visible
