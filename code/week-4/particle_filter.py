@@ -133,8 +133,8 @@ class ParticleFilter:
                 s_landmark = {}
  
                 for idx, val in enumerate(predictions):
-                    print(val)
-                    print(transformed_obs)
+                    # print(val)
+                    # print(transformed_obs)
                     dist = distance(transformed_obs, val)
                     s_landmark_k.append({'dist': dist, 'x': val['x'], 'y': val['y']})
                     
