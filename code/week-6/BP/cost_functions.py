@@ -32,14 +32,68 @@ def goal_distance_cost(vehicle, trajectory, predictions, data):
     Cost of being out of goal lane also becomes larger as vehicle approaches
     the goal distance.
     '''
-    return 0
+    c = 0
+    dist = data[2] 
+
+    if dist > 0 :
+        delta_d = 2.0 * vehicle.goal_lane - data[0] - data[1]
+
+        c = 1 - 2 * exp(-(abs(delta_d) / dist))
+    else: 
+        c = 1
+    
+    return c
+    # return 0
 
 def inefficiency_cost(vehicle, trajectory, predictions, data):
     '''
     Cost becomes higher for trajectories with intended lane and final lane
     that have slower traffic.
     '''
-    return 0
+    def ahead_speed(predictions,lane,vehicle):
+
+        min_s          = vehicle.goal_s
+        found_vehicle = False
+        speed        = 0.0
+
+        temp_vehicle = None
+
+        for k,v in predictions.items():
+            
+            if len(v) == 0: 
+                continue;
+
+            temp_vehicle = v[1];
+
+            if temp_vehicle.lane == lane and temp_vehicle.s > vehicle.s and temp_vehicle.s < min_s:
+                min_s         = temp_vehicle.s;
+                speed         = temp_vehicle.v;
+                found_vehicle = True;
+               
+        
+
+        shortest_dst = temp_vehicle.s - vehicle.s;
+
+        if found_vehicle and (shortest_dst < 40) : 
+            return speed;
+
+        else : 
+            return -1.0;
+
+    ahead_speed_intended = ahead_speed(predictions,data[0],vehicle)
+
+    if ahead_speed_intended < 0 :
+        ahead_speed_intended = vehicle.target_speed
+
+    ahead_speed_final = ahead_speed(predictions, data[1], vehicle);
+
+    if ahead_speed_final < 0:
+        ahead_speed_final= vehicle.target_speed
+    
+    c = (2.0 * vehicle.target_speed - ahead_speed_intended - ahead_speed_final)/vehicle.target_speed;
+    
+    # return 0
+    return c
 
 def calculate_cost(vehicle, trajectory, predictions):
     '''

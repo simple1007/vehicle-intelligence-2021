@@ -58,6 +58,22 @@ class Vehicle(object):
 
         # Note that the return value is a trajectory, where a trajectory
         # is a list of Vehicle objects with two elements.
+        states = self.successor_states()
+        c = 0
+
+        costs = []
+        final_states = []
+        final_trajectories = []
+
+        for s in states:
+            trajectory = self.generate_trajectory(s,predictions)
+
+            if len(trajectory) != 0 :
+                
+                c = calculate_cost(self,trajectory,predictions)
+                costs.append(c)
+                final_trajectories.append(trajectory)
+
         return [
             Vehicle(self.lane, self.s, self.v, self.a, self.state),
             Vehicle(self.lane, self.position_at(1), self.v, 0, self.state)
