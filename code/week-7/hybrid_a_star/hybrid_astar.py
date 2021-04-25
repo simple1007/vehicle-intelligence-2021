@@ -18,7 +18,7 @@ class HybridAStar:
         self.dim = dim
         self.closed = np.zeros(self.dim, dtype=np.int)
         self.came_from = np.full(self.dim, None)
-
+    
     # Expand from a given state by enumerating reachable states.
     def expand(self, current, goal):
         g = current['g']
@@ -28,10 +28,24 @@ class HybridAStar:
         # previously expanded cell.
         g2 = g + 1
         next_states = []
-
+        import math
         # Consider a discrete selection of steering angles.
-        for delta_t in []:
-            pass
+        for delta_t in range(-35,40,5):#[]:
+            d = math.pi / 180.0 * delta_t
+            o = self.speed / self.length * math.tan(d)
+            theta2 = theta + o
+            if theta2 < 0:
+                theta2 += 2*math.pi
+            # pass
+            x2 = x + self.speed * math.cos(theta)
+            y2 = y + self.speed * math.sin(theta)
+            s2 = {}
+            s2['f'] = g2 + self.heuristic(x2,y2,goal)
+            s2['g'] = g2
+            s2['x'] = x2
+            s2['y'] = y2
+            s2['t'] = theta2
+            next_states.append(s2)
             # TODO: implement the trajectory generation based on
             # a simple bicycle model.
             # Let theta2 be the vehicle's heading (in radian)
@@ -79,7 +93,22 @@ class HybridAStar:
             # Compute reachable new states and process each of them.
             next_states = self.expand(curr, goal)
             for n in next_states:
-                pass
+                # pass
+                g2 = n['g']
+                x2 = n['x']
+                y2 = n['y']
+                theta2 = n['t']
+
+                if (x2 < 0 or x2 >= len(grid)) or (y2 < 0 or y2 >= len(grid[0])):
+                    continue
+
+                st2 = self.theta_to_stack_num(theta2)
+
+                if self.closed[st2][self.idx(x2)][self.idx(y2)] == 0 and grid[self.idx(x2)][self.idx(y2)] == 0:
+                    opened.append(n)
+                    self.closed[st2][self.idx(x2)][self.idx(y2)] = 1
+                    self.came_from[st2][self.idx(x2)][self.idx(y2)] = curr
+                    total_closed += 1
         else:
             # We weren't able to find a valid path; this does not necessarily
             # mean there is no feasible trajectory to reach the goal.
@@ -94,7 +123,10 @@ class HybridAStar:
         # given theta represented in radian. Note that the calculation
         # should partition 360 degrees (2 * PI rad) into different
         # cells whose number is given by NUM_THETA_CELLS.
-        return 0
+        import math
+        theta_ = math.fmod((theta + 2 * math.pi),2 * math.pi)
+        sn = int((round(theta_ * self.NUM_THETA_CELLS / (2*math.pi))) % self.NUM_THETA_CELLS);
+        return sn
 
     # Calculate the index of the grid cell based on the vehicle's position.
     def idx(self, pos):
@@ -104,7 +136,8 @@ class HybridAStar:
     # Implement a heuristic function to be used in the hybrid A* algorithm.
     def heuristic(self, x, y, goal):
         # TODO: implement a heuristic function.
-        return 0
+        import math
+        return math.fabs(y - goal[0]) + math.fabs(x-goal[1])
 
     # Reconstruct the path taken by the hybrid A* algorithm.
     def reconstruct_path(self, start, goal):
